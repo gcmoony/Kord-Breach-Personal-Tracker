@@ -1,0 +1,811 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+.kb-root {
+  --bg: #12140f;
+  --panel: #1a1e14;
+  --panel-alt: #20241a;
+  --ink: #ddd7c4;
+  --muted: #7c8071;
+  --amber: #c9a227;
+  --olive: #6a7a44;
+  --red: #9a3324;
+  --border: #383d2c;
+  --border-soft: #2a2e21;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100%;
+  padding: 28px 20px 60px;
+  box-sizing: border-box;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.kb-root * { box-sizing: border-box; }
+
+.kb-wrap { max-width: 960px; margin: 0 auto; }
+
+/* ---------- Header ---------- */
+.kb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.kb-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--amber);
+  margin: 0 0 6px;
+}
+.kb-title {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: clamp(24px, 4vw, 34px);
+  margin: 0;
+  color: var(--ink);
+}
+.kb-title span { color: var(--amber); }
+.kb-stamp {
+  border: 3px solid var(--red);
+  color: var(--red);
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 8px 14px;
+  transform: rotate(-4deg);
+  border-radius: 3px;
+  font-size: 13px;
+  white-space: nowrap;
+  opacity: 0.9;
+}
+.kb-stamp b { font-size: 18px; display: block; letter-spacing: 0; }
+
+/* ---------- Section shell ---------- */
+.kb-section { margin-bottom: 32px; }
+.kb-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+  padding-bottom: 8px;
+}
+.kb-section-title {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 15px;
+  color: var(--muted);
+  margin: 0;
+}
+.kb-section-title b { color: var(--ink); }
+.kb-section-sub { font-size: 11px; color: var(--muted); }
+
+/* ---------- Inventory grid ---------- */
+.kb-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.kb-doc-tile {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 12px 10px;
+  position: relative;
+}
+.kb-doc-name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  min-height: 28px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.kb-doc-locations {
+  font-size: 9px;
+  color: var(--border);
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.kb-doc-total {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.kb-doc-mini-bar {
+  height: 4px;
+  background: var(--panel-alt);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.kb-doc-mini-bar-inner {
+  height: 100%;
+  background: var(--olive);
+}
+.kb-doc-remaining {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.3;
+}
+.kb-doc-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.kb-doc-count {
+  font-family: 'Oswald', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--amber);
+  min-width: 34px;
+}
+.kb-stepper { display: flex; gap: 4px; }
+.kb-btn-step {
+  width: 24px; height: 24px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 3px;
+}
+.kb-btn-step:hover { border-color: var(--amber); color: var(--amber); }
+.kb-doc-remove {
+  position: absolute;
+  top: 4px; right: 6px;
+  background: none; border: none;
+  color: var(--border);
+  cursor: pointer;
+  font-size: 12px;
+}
+.kb-doc-remove:hover { color: var(--red); }
+
+.kb-add-tile {
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px;
+}
+.kb-add-tile:hover { border-color: var(--amber); color: var(--amber); }
+
+/* ---------- Progress bar ---------- */
+.kb-progress-outer {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  height: 22px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.kb-progress-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--olive), var(--amber));
+  transition: width 0.3s ease;
+}
+.kb-progress-label { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
+
+/* ---------- Rewards ---------- */
+.kb-reward {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.kb-reward.unlocked { border-color: var(--olive); }
+.kb-reward-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.kb-reward-name {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink);
+}
+.kb-reward-page {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+.kb-reward-remove {
+  background: none; border: none; color: var(--border); cursor: pointer; font-size: 13px;
+  position: relative;
+  z-index: 2;
+}
+.kb-reward-remove:hover { color: var(--red); }
+
+.kb-req-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.kb-req-chip {
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kb-req-chip.ok { border-color: var(--olive); color: var(--ink); }
+.kb-req-chip.short { color: var(--muted); }
+.kb-req-qty { color: var(--amber); font-weight: 700; }
+
+.kb-reward-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.kb-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--olive);
+  background: transparent;
+  color: var(--olive);
+  cursor: pointer;
+}
+.kb-btn:hover:not(:disabled) { background: var(--olive); color: #0e100a; }
+.kb-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.kb-toggle-label {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.kb-unlocked-stamp {
+  position: absolute;
+  z-index: 1;
+  top: 10px; right: 14px;
+  border: 2px solid var(--red);
+  color: var(--red);
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-size: 11px;
+  padding: 3px 9px;
+  transform: rotate(-6deg);
+  border-radius: 3px;
+  opacity: 0.85;
+}
+
+/* ---------- Forms ---------- */
+.kb-form {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px;
+  margin-top: 10px;
+}
+.kb-form input[type="text"], .kb-form input[type="number"], .kb-form select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 3px;
+}
+.kb-form label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+.kb-form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; align-items: flex-end; }
+.kb-req-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 6px; }
+.kb-req-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding-bottom: 4px; }
+.kb-form-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+.kb-empty {
+  color: var(--muted);
+  font-size: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+}
+.kb-loading { color: var(--muted); font-size: 12px; padding: 20px; text-align: center; }
+.kb-footer-row { display:flex; justify-content: space-between; align-items:center; margin-top: 30px; font-size: 10px; color: var(--border); }
+.kb-reset-btn { background:none;border:none;color:var(--border); text-decoration: underline; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:10px; }
+.kb-reset-btn:hover { color: var(--red); }
+</style>
+
+<div class="kb-root" id="kb-root">
+  <div class="kb-wrap">
+    <div class="kb-header">
+      <div>
+        <p class="kb-eyebrow">TERRAGROUP FIELD ARCHIVE</p>
+        <h1 class="kb-title">KORD BREACH <span>LEDGER</span></h1>
+      </div>
+      <div class="kb-stamp" id="kb-overall-stamp">
+        <b id="kb-overall-pct">0%</b>
+        REWARDS CLAIMED
+      </div>
+    </div>
+
+    <div id="kb-storage-warning" style="display:none; border:1px solid var(--red); color:var(--red); font-size:11px; padding:8px 12px; border-radius:4px; margin-bottom:16px;">
+      Couldn't save to this browser's storage (IndexedDB unavailable or blocked — private/incognito mode is a common cause). Your changes will only last for this page load.
+    </div>
+    <div id="kb-loading" class="kb-loading">Loading ledger…</div>
+
+    <div id="kb-app" style="display:none;">
+
+      <div class="kb-section">
+        <div class="kb-progress-outer"><div class="kb-progress-inner" id="kb-progress-bar" style="width:0%"></div></div>
+        <div class="kb-progress-label"><span id="kb-progress-text">0 / 0 rewards unlocked</span><span id="kb-doc-total-text">0 documents in inventory</span></div>
+      </div>
+
+      <div class="kb-section">
+        <div class="kb-section-head">
+          <p class="kb-section-title">Document <b>Inventory</b></p>
+          <span class="kb-section-sub">what you're currently holding — totals shrink as rewards are claimed</span>
+        </div>
+        <div class="kb-inv-grid" id="kb-inv-grid"></div>
+      </div>
+
+      <div class="kb-section">
+        <div class="kb-section-head">
+          <p class="kb-section-title">Battle Pass <b>Rewards</b></p>
+          <span class="kb-section-sub">define what each reward costs, claim when ready</span>
+        </div>
+        <div id="kb-rewards-list"></div>
+        <button class="kb-btn" id="kb-show-reward-form" style="margin-top:6px;">+ Add reward</button>
+        <div id="kb-reward-form-slot"></div>
+      </div>
+
+      <div class="kb-footer-row">
+        <span>Data is stored privately in your browser session for this tracker.</span>
+        <button class="kb-reset-btn" id="kb-reset-all">Reset all data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'kord-breach-state-v2';
+  const DB_NAME = 'kord-breach-db';
+  const DB_VERSION = 1;
+  const STORE_NAME = 'state';
+
+  function openDB() {
+    return new Promise(function(resolve, reject){
+      if (!('indexedDB' in window)) { reject(new Error('IndexedDB not supported')); return; }
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function(){
+        req.result.createObjectStore(STORE_NAME);
+      };
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ reject(req.error); };
+    });
+  }
+
+  function idbGet(key) {
+    return openDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.get(key);
+        req.onsuccess = function(){ resolve(req.result); };
+        req.onerror = function(){ reject(req.error); };
+      });
+    });
+  }
+
+  function idbSet(key, value) {
+    return openDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.put(value, key);
+        req.onsuccess = function(){ resolve(); };
+        req.onerror = function(){ reject(req.error); };
+      });
+    });
+  }
+
+  const DEFAULT_STATE = {
+    docTypes: [
+      { id: 'financial', name: 'Financial documents', total: 65, locations: 'Customs / Streets of Tarkov / Interchange' },
+      { id: 'personnel', name: 'PMC personnel files', total: 57, locations: 'Reserve / Lighthouse / Icebreaker' },
+      { id: 'project', name: 'Project documentation', total: 63, locations: 'Factory / Reserve / Customs' },
+      { id: 'blueprints', name: 'Blueprints and technical documentation', total: 65, locations: 'Interchange / Factory / Labyrinth' },
+      { id: 'test', name: 'Test documentation', total: 64, locations: 'Shoreline / Woods / Icebreaker' },
+      { id: 'user', name: 'User documentation', total: 51, locations: 'GZ / Streets of Tarkov / Labs' },
+      { id: 'medical', name: 'Medical documents', total: 86, locations: 'Labs / GZ / Labyrinth' },
+      { id: 'classified', name: 'Classified (universal)', total: null, locations: 'Expansion Hub (TarCoins)' }
+    ],
+    inventory: { financial: 0, personnel: 0, project: 0, blueprints: 0, test: 0, user: 0, medical: 0, classified: 0 },
+    rewards: []
+  };
+
+  let state = null;
+  let nextFormReqCount = 1;
+
+  function uid(prefix) {
+    return prefix + '_' + Math.random().toString(36).slice(2, 9);
+  }
+
+  function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+  let storageOk = true;
+
+  async function loadState() {
+    try {
+      const result = await idbGet(STORAGE_KEY);
+      if (result) return result;
+    } catch (e) {
+      storageOk = false;
+      console.error('Failed to load ledger state from IndexedDB', e);
+    }
+    return clone(DEFAULT_STATE);
+  }
+
+  async function saveState() {
+    try {
+      await idbSet(STORAGE_KEY, state);
+      storageOk = true;
+    } catch (e) {
+      storageOk = false;
+      console.error('Failed to save ledger state to IndexedDB', e);
+    }
+    updateStorageWarning();
+  }
+
+  function updateStorageWarning() {
+    const el = document.getElementById('kb-storage-warning');
+    if (!el) return;
+    el.style.display = storageOk ? 'none' : 'block';
+  }
+
+  function docName(id) {
+    const d = state.docTypes.find(function(t){ return t.id === id; });
+    return d ? d.name : '(removed type)';
+  }
+
+  function canClaim(reward) {
+    return reward.reqs.every(function(r){
+      return (state.inventory[r.docId] || 0) >= r.qty;
+    });
+  }
+
+  function render() {
+    renderInventory();
+    renderRewards();
+    renderOverall();
+  }
+
+  function renderOverall() {
+    const total = state.rewards.length;
+    const unlocked = state.rewards.filter(function(r){ return r.unlocked; }).length;
+    const pct = total === 0 ? 0 : Math.round((unlocked / total) * 100);
+    document.getElementById('kb-overall-pct').textContent = pct + '%';
+    document.getElementById('kb-progress-bar').style.width = pct + '%';
+    document.getElementById('kb-progress-text').textContent = unlocked + ' / ' + total + ' rewards unlocked';
+    const docTotal = Object.values(state.inventory).reduce(function(a,b){ return a + (b||0); }, 0);
+    document.getElementById('kb-doc-total-text').textContent = docTotal + ' documents in inventory';
+  }
+
+  function renderInventory() {
+    const grid = document.getElementById('kb-inv-grid');
+    grid.innerHTML = '';
+    state.docTypes.forEach(function(dt){
+      const tile = document.createElement('div');
+      tile.className = 'kb-doc-tile';
+      const count = state.inventory[dt.id] || 0;
+      const hasTotal = dt.total !== null && dt.total !== undefined;
+      const pct = hasTotal && dt.total > 0 ? Math.min(100, Math.round((count / dt.total) * 100)) : 0;
+      tile.innerHTML =
+        '<button class="kb-doc-remove" title="Remove type" data-remove-type="' + dt.id + '">✕</button>' +
+        '<div class="kb-doc-name">' + escapeHtml(dt.name) + '</div>' +
+        (dt.locations ? '<div class="kb-doc-locations">' + escapeHtml(dt.locations) + '</div>' : '') +
+        '<div class="kb-doc-count-row">' +
+          '<div class="kb-doc-count">' + count + (hasTotal ? '<span class="kb-doc-total"> / ' + dt.total + '</span>' : '') + '</div>' +
+          '<div class="kb-stepper">' +
+            '<button class="kb-btn-step" data-step="-1" data-doc="' + dt.id + '">−</button>' +
+            '<button class="kb-btn-step" data-step="1" data-doc="' + dt.id + '">+</button>' +
+          '</div>' +
+        '</div>' +
+        (hasTotal ? '<div class="kb-doc-mini-bar"><div class="kb-doc-mini-bar-inner" style="width:' + pct + '%"></div></div>' +
+          '<div class="kb-doc-remaining">' + Math.max(0, dt.total - count) + ' more still needed for remaining rewards</div>' : '');
+      grid.appendChild(tile);
+    });
+    const addTile = document.createElement('button');
+    addTile.className = 'kb-add-tile';
+    addTile.id = 'kb-add-doc-type';
+    addTile.textContent = '+ New document type';
+    grid.appendChild(addTile);
+
+    grid.querySelectorAll('[data-step]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const id = btn.getAttribute('data-doc');
+        const delta = parseInt(btn.getAttribute('data-step'), 10);
+        const current = state.inventory[id] || 0;
+        state.inventory[id] = Math.max(0, current + delta);
+        saveState();
+        render();
+      });
+    });
+    grid.querySelectorAll('[data-remove-type]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const id = btn.getAttribute('data-remove-type');
+        if (!confirm('Remove "' + docName(id) + '"? Rewards requiring it will keep a reference but it will show as removed.')) return;
+        state.docTypes = state.docTypes.filter(function(t){ return t.id !== id; });
+        delete state.inventory[id];
+        saveState();
+        render();
+      });
+    });
+    document.getElementById('kb-add-doc-type').addEventListener('click', function(){
+      const name = prompt('Document type name (e.g. "Blueprints"):');
+      if (!name) return;
+      const totalRaw = prompt('Total needed to complete the pass (optional, leave blank if unknown):');
+      const total = totalRaw && totalRaw.trim() ? parseInt(totalRaw, 10) || null : null;
+      const locations = prompt('Spawn locations (optional, e.g. "Customs / Interchange"):');
+      const id = uid('doc');
+      state.docTypes.push({ id: id, name: name.trim(), total: total, locations: locations ? locations.trim() : '' });
+      state.inventory[id] = 0;
+      saveState();
+      render();
+    });
+  }
+
+  function renderRewards() {
+    const list = document.getElementById('kb-rewards-list');
+    list.innerHTML = '';
+    if (state.rewards.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'kb-empty';
+      empty.textContent = 'No rewards added yet. Add a reward and set which documents (and how many) it costs.';
+      list.appendChild(empty);
+      return;
+    }
+
+    const sorted = clone(state.rewards).sort(function(a,b){
+      return (a.page || 0) - (b.page || 0);
+    });
+
+    sorted.forEach(function(reward){
+      const card = document.createElement('div');
+      card.className = 'kb-reward' + (reward.unlocked ? ' unlocked' : '');
+
+      const reqChips = reward.reqs.map(function(r){
+        const have = state.inventory[r.docId] || 0;
+        const ok = have >= r.qty;
+        return '<span class="kb-req-chip ' + (ok ? 'ok' : 'short') + '">' +
+          escapeHtml(docName(r.docId)) + ' <span class="kb-req-qty">' + have + '/' + r.qty + '</span></span>';
+      }).join('');
+
+      card.innerHTML =
+        (reward.unlocked ? '<div class="kb-unlocked-stamp">UNLOCKED</div>' : '') +
+        '<div class="kb-reward-top">' +
+          '<div>' +
+            '<div class="kb-reward-name">' + escapeHtml(reward.name) + '</div>' +
+            (reward.page ? '<div class="kb-reward-page">PAGE ' + reward.page + '</div>' : '') +
+          '</div>' +
+          '<button class="kb-reward-remove" data-remove-reward="' + reward.id + '" title="Remove reward">✕</button>' +
+        '</div>' +
+        '<div class="kb-req-list">' + (reqChips || '<span class="kb-req-chip short">no requirements set</span>') + '</div>' +
+        '<div class="kb-reward-actions">' +
+          '<button class="kb-btn" data-claim="' + reward.id + '" ' + (reward.unlocked || !canClaim(reward) ? 'disabled' : '') + '>' +
+            (reward.unlocked ? 'Claimed' : 'Claim (uses documents)') +
+          '</button>' +
+          '<button class="kb-btn" data-mark="' + reward.id + '" ' + (reward.unlocked ? 'disabled' : '') + ' style="border-color:var(--muted);color:var(--muted);">' +
+            (reward.unlocked ? 'Unlocked' : 'Mark unlocked (no inventory)') +
+          '</button>' +
+        '</div>';
+
+      list.appendChild(card);
+    });
+
+    list.querySelectorAll('[data-claim]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const id = btn.getAttribute('data-claim');
+        const reward = state.rewards.find(function(r){ return r.id === id; });
+        if (!reward || reward.unlocked || !canClaim(reward)) return;
+        reward.reqs.forEach(function(r){
+          state.inventory[r.docId] = (state.inventory[r.docId] || 0) - r.qty;
+          const dt = state.docTypes.find(function(t){ return t.id === r.docId; });
+          if (dt && dt.total !== null && dt.total !== undefined) {
+            dt.total = Math.max(0, dt.total - r.qty);
+          }
+        });
+        reward.unlocked = true;
+        reward.consumedInventory = true;
+        saveState();
+        render();
+      });
+    });
+    list.querySelectorAll('[data-mark]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const id = btn.getAttribute('data-mark');
+        const reward = state.rewards.find(function(r){ return r.id === id; });
+        if (!reward || reward.unlocked) return;
+        reward.reqs.forEach(function(r){
+          const dt = state.docTypes.find(function(t){ return t.id === r.docId; });
+          if (dt && dt.total !== null && dt.total !== undefined) {
+            dt.total = Math.max(0, dt.total - r.qty);
+          }
+        });
+        reward.unlocked = true;
+        reward.consumedInventory = false;
+        saveState();
+        render();
+      });
+    });
+    list.querySelectorAll('[data-remove-reward]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const id = btn.getAttribute('data-remove-reward');
+        const reward = state.rewards.find(function(r){ return r.id === id; });
+        if (reward && reward.unlocked) {
+          reward.reqs.forEach(function(r){
+            if (reward.consumedInventory) {
+              state.inventory[r.docId] = (state.inventory[r.docId] || 0) + r.qty;
+            }
+            const dt = state.docTypes.find(function(t){ return t.id === r.docId; });
+            if (dt && dt.total !== null && dt.total !== undefined) {
+              dt.total = dt.total + r.qty;
+            }
+          });
+        }
+        state.rewards = state.rewards.filter(function(r){ return r.id !== id; });
+        saveState();
+        render();
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function showRewardForm() {
+    const slot = document.getElementById('kb-reward-form-slot');
+    if (slot.querySelector('.kb-form')) return;
+
+    let reqRows = [{ docId: state.docTypes[0] ? state.docTypes[0].id : '', qty: 1 }];
+    let formName = '';
+    let formPage = '';
+
+    function renderForm() {
+      slot.innerHTML = '';
+      const form = document.createElement('div');
+      form.className = 'kb-form';
+
+      const optionsHtml = state.docTypes.map(function(dt){ return '<option value="' + dt.id + '">' + escapeHtml(dt.name) + '</option>'; }).join('');
+
+      let reqRowsHtml = reqRows.map(function(row, idx){
+        return '<div class="kb-req-row">' +
+          '<div><label>Document</label><select data-req-doc="' + idx + '">' + optionsHtml + '</select></div>' +
+          '<div><label>Qty</label><input type="number" min="1" value="' + row.qty + '" data-req-qty="' + idx + '" style="width:70px;"/></div>' +
+          '<button class="kb-req-remove" data-req-remove="' + idx + '" title="Remove requirement">✕</button>' +
+        '</div>';
+      }).join('');
+
+      form.innerHTML =
+        '<div class="kb-form-row">' +
+          '<div><label>Reward name</label><input type="text" id="kb-rf-name" placeholder="e.g. Radian Model 1" style="width:220px;" value="' + escapeHtml(formName) + '"/></div>' +
+          '<div><label>Page (optional)</label><input type="number" min="1" id="kb-rf-page" style="width:80px;" value="' + escapeHtml(String(formPage)) + '"/></div>' +
+        '</div>' +
+        '<label style="margin-bottom:6px;">Requirements</label>' +
+        reqRowsHtml +
+        '<div class="kb-form-actions">' +
+          '<button class="kb-btn" id="kb-rf-add-req" type="button">+ requirement</button>' +
+        '</div>' +
+        '<div class="kb-form-actions">' +
+          '<button class="kb-btn" id="kb-rf-save" type="button">Save reward</button>' +
+          '<button class="kb-btn" id="kb-rf-cancel" type="button" style="border-color:var(--border);color:var(--muted);">Cancel</button>' +
+        '</div>';
+
+      slot.appendChild(form);
+
+      document.getElementById('kb-rf-name').addEventListener('input', function(e){
+        formName = e.target.value;
+      });
+      document.getElementById('kb-rf-page').addEventListener('input', function(e){
+        formPage = e.target.value;
+      });
+
+      form.querySelectorAll('[data-req-doc]').forEach(function(sel){
+        sel.value = reqRows[parseInt(sel.getAttribute('data-req-doc'),10)].docId;
+        sel.addEventListener('change', function(){
+          reqRows[parseInt(sel.getAttribute('data-req-doc'),10)].docId = sel.value;
+        });
+      });
+      form.querySelectorAll('[data-req-qty]').forEach(function(inp){
+        inp.addEventListener('input', function(){
+          reqRows[parseInt(inp.getAttribute('data-req-qty'),10)].qty = Math.max(1, parseInt(inp.value,10) || 1);
+        });
+      });
+      form.querySelectorAll('[data-req-remove]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          const idx = parseInt(btn.getAttribute('data-req-remove'),10);
+          reqRows.splice(idx, 1);
+          renderForm();
+        });
+      });
+      document.getElementById('kb-rf-add-req').addEventListener('click', function(){
+        reqRows.push({ docId: state.docTypes[0] ? state.docTypes[0].id : '', qty: 1 });
+        renderForm();
+      });
+      document.getElementById('kb-rf-cancel').addEventListener('click', function(){
+        slot.innerHTML = '';
+      });
+      document.getElementById('kb-rf-save').addEventListener('click', function(){
+        const name = document.getElementById('kb-rf-name').value.trim();
+        if (!name) { alert('Give the reward a name.'); return; }
+        const page = parseInt(document.getElementById('kb-rf-page').value, 10) || null;
+        const cleanReqs = reqRows.filter(function(r){ return r.docId; });
+        state.rewards.push({
+          id: uid('reward'),
+          name: name,
+          page: page,
+          reqs: cleanReqs,
+          unlocked: false
+        });
+        saveState();
+        slot.innerHTML = '';
+        render();
+      });
+    }
+
+    renderForm();
+  }
+
+  async function init() {
+    state = await loadState();
+    updateStorageWarning();
+    document.getElementById('kb-loading').style.display = 'none';
+    document.getElementById('kb-app').style.display = 'block';
+    render();
+
+    document.getElementById('kb-show-reward-form').addEventListener('click', showRewardForm);
+    document.getElementById('kb-reset-all').addEventListener('click', async function(){
+      if (!confirm('Reset all inventory and rewards? This cannot be undone.')) return;
+      state = clone(DEFAULT_STATE);
+      await saveState();
+      render();
+    });
+  }
+
+  init();
+})();
+</script>
