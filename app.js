@@ -167,6 +167,7 @@
 
   let state = null;
   let nextFormReqCount = 1;
+  let rewardFilter = "all";
 
   function uid(prefix) {
     return prefix + "_" + Math.random().toString(36).slice(2, 9);
@@ -406,7 +407,33 @@
       return (a.page || 0) - (b.page || 0);
     });
 
-    sorted.forEach(function (reward) {
+    let filtered = sorted;
+    if (rewardFilter === "locked") {
+      filtered = sorted.filter(function (r) {
+        return !r.unlocked;
+      });
+    } else if (rewardFilter === "unlocked") {
+      filtered = sorted.filter(function (r) {
+        return r.unlocked;
+      });
+    }
+
+    if (filtered.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "kb-empty";
+      if (rewardFilter === "locked") {
+        empty.textContent = "No locked rewards.";
+      } else if (rewardFilter === "unlocked") {
+        empty.textContent = "No unlocked rewards.";
+      } else {
+        empty.textContent =
+          "No rewards added yet. Add a reward and set which documents (and how many) it costs.";
+      }
+      list.appendChild(empty);
+      return;
+    }
+
+    filtered.forEach(function (reward) {
       const card = document.createElement("div");
       card.className = "kb-reward" + (reward.unlocked ? " unlocked" : "");
 
@@ -464,6 +491,9 @@
         ' style="border-color:var(--muted);color:var(--muted);">' +
         (reward.unlocked ? "Unlocked" : "Mark unlocked (no inventory)") +
         "</button>" +
+        '<button class="kb-btn" data-edit="' +
+        reward.id +
+        '" style="border-color:var(--border);color:var(--muted);">Edit</button>' +
         "</div>";
 
       list.appendChild(card);
@@ -519,6 +549,12 @@
         render();
       });
     });
+    list.querySelectorAll("[data-edit]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const id = btn.getAttribute("data-edit");
+        showEditRewardForm(id);
+      });
+    });
   }
 
   function escapeHtml(str) {
@@ -527,15 +563,26 @@
     return d.innerHTML;
   }
 
-  function showRewardForm() {
+  function openRewardForm(editId) {
     const slot = document.getElementById("kb-reward-form-slot");
-    if (slot.querySelector(".kb-form")) return;
+    if (slot.querySelector(".kb-form")) {
+      slot.innerHTML = "";
+    }
+    const isEdit = !!editId;
+    const existing = isEdit
+      ? state.rewards.find(function (r) {
+          return r.id === editId;
+        })
+      : null;
+    if (isEdit && !existing) return;
 
-    let reqRows = [
-      { docId: state.docTypes[0] ? state.docTypes[0].id : "", qty: 1 },
-    ];
-    let formName = "";
-    let formPage = "";
+    let reqRows = isEdit
+      ? existing.reqs.length
+        ? clone(existing.reqs)
+        : [{ docId: state.docTypes[0] ? state.docTypes[0].id : "", qty: 1 }]
+      : [{ docId: state.docTypes[0] ? state.docTypes[0].id : "", qty: 1 }];
+    let formName = isEdit ? existing.name : "";
+    let formPage = isEdit && existing.page ? String(existing.page) : "";
 
     function renderForm() {
       slot.innerHTML = "";
@@ -587,7 +634,9 @@
         '<button class="kb-btn" id="kb-rf-add-req" type="button">+ requirement</button>' +
         "</div>" +
         '<div class="kb-form-actions">' +
-        '<button class="kb-btn" id="kb-rf-save" type="button">Save reward</button>' +
+        '<button class="kb-btn" id="kb-rf-save" type="button">' +
+        (isEdit ? "Update reward" : "Save reward") +
+        '</button>' +
         '<button class="kb-btn" id="kb-rf-cancel" type="button" style="border-color:var(--border);color:var(--muted);">Cancel</button>' +
         "</div>";
 
@@ -638,6 +687,7 @@
         .getElementById("kb-rf-cancel")
         .addEventListener("click", function () {
           slot.innerHTML = "";
+          slot.classList.remove("is-open");
         });
       document
         .getElementById("kb-rf-save")
@@ -652,20 +702,50 @@
           const cleanReqs = reqRows.filter(function (r) {
             return r.docId;
           });
-          state.rewards.push({
-            id: uid("reward"),
-            name: name,
-            page: page,
-            reqs: cleanReqs,
-            unlocked: false,
-          });
+          if (isEdit) {
+            existing.name = name;
+            existing.page = page;
+            existing.reqs = cleanReqs;
+          } else {
+            state.rewards.push({
+              id: uid("reward"),
+              name: name,
+              page: page,
+              reqs: cleanReqs,
+              unlocked: false,
+            });
+          }
           saveState();
           slot.innerHTML = "";
+          slot.classList.remove("is-open");
           render();
         });
     }
 
     renderForm();
+    slot.classList.add("is-open");
+    slot.onclick = function (e) {
+      if (e.target === slot) {
+        slot.innerHTML = "";
+        slot.classList.remove("is-open");
+      }
+    };
+    function escHandler(e) {
+      if (e.key === "Escape" && slot.classList.contains("is-open")) {
+        slot.innerHTML = "";
+        slot.classList.remove("is-open");
+        document.removeEventListener("keydown", escHandler);
+      }
+    }
+    document.addEventListener("keydown", escHandler);
+  }
+
+  function showRewardForm() {
+    openRewardForm(null);
+  }
+
+  function showEditRewardForm(rewardId) {
+    openRewardForm(rewardId);
   }
 
   async function init() {
@@ -674,6 +754,14 @@
     document.getElementById("kb-loading").style.display = "none";
     document.getElementById("kb-app").style.display = "block";
     render();
+
+    const filterEl = document.getElementById("kb-reward-filter");
+    if (filterEl) {
+      filterEl.addEventListener("change", function (e) {
+        rewardFilter = e.target.value;
+        renderRewards();
+      });
+    }
 
     document
       .getElementById("kb-show-reward-form")
