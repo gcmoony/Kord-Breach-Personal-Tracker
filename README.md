@@ -7,10 +7,10 @@ event.
 
 ### Document Inventory
 
-- Tracks 8 document types — Financial documents, PMC personnel files, Project
-  documentation, Blueprints and technical documentation, Test documentation,
-  User documentation, Medical documents, and Classified (universal) — each with
-  its default map locations.
+- Tracks 9 document types — Financial documents, PMC personnel files, Project
+  documentation, Blueprints and technical documentation, Technical
+  Documentation, Test documentation, User documentation, Medical documents, and
+  Classified (universal) — each with its default map locations.
 - Adjust how many of each document you own with +/- steppers. The total
   documents in your inventory is shown in the progress header.
 

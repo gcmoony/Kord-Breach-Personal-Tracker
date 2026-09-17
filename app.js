@@ -37,6 +37,11 @@
         locations: "Interchange / Factory / Labyrinth",
       },
       {
+        id: "technical",
+        name: "Technical Documentation",
+        locations: "Labs / Reserve / Ground Zero",
+      },
+      {
         id: "test",
         name: "Test documentation",
         locations: "Shoreline / Woods / Icebreaker",
@@ -62,6 +67,7 @@
       personnel: 0,
       project: 0,
       blueprints: 0,
+      technical: 0,
       test: 0,
       user: 0,
       medical: 0,
@@ -149,6 +155,19 @@
         if (Array.isArray(result.docTypes)) {
           result.docTypes.forEach(function (dt) {
             delete dt.total;
+          });
+          // migrate: add Technical Documentation if missing (distinct from Blueprints and technical documentation)
+          if (!result.docTypes.some(function (dt) { return dt.id === "technical"; })) {
+            var idx = result.docTypes.findIndex(function (dt) { return dt.id === "classified"; });
+            var tech = { id: "technical", name: "Technical Documentation", locations: "Labs / Reserve / Ground Zero" };
+            if (idx >= 0) result.docTypes.splice(idx, 0, tech);
+            else result.docTypes.push(tech);
+          }
+        }
+        // migrate: ensure inventory has all keys (e.g., technical for old saves)
+        if (result.inventory && typeof result.inventory === "object") {
+          Object.keys(DEFAULT_STATE.inventory).forEach(function (k) {
+            if (!(k in result.inventory)) result.inventory[k] = 0;
           });
         }
         if (!result.preferences) {
