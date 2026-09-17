@@ -1,58 +1,17 @@
 (function () {
   const STORAGE_KEY = "kord-breach-state-v2";
-  const DB_NAME = "kord-breach-db";
-  const DB_VERSION = 1;
-  const STORE_NAME = "state";
 
-  function openDB() {
-    return new Promise(function (resolve, reject) {
-      if (!("indexedDB" in window)) {
-        reject(new Error("IndexedDB not supported"));
-        return;
-      }
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = function () {
-        req.result.createObjectStore(STORE_NAME);
-      };
-      req.onsuccess = function () {
-        resolve(req.result);
-      };
-      req.onerror = function () {
-        reject(req.error);
-      };
-    });
+  function lsGet(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      throw e;
+    }
   }
 
-  function idbGet(key) {
-    return openDB().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        const tx = db.transaction(STORE_NAME, "readonly");
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.get(key);
-        req.onsuccess = function () {
-          resolve(req.result);
-        };
-        req.onerror = function () {
-          reject(req.error);
-        };
-      });
-    });
-  }
-
-  function idbSet(key, value) {
-    return openDB().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        const tx = db.transaction(STORE_NAME, "readwrite");
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.put(value, key);
-        req.onsuccess = function () {
-          resolve();
-        };
-        req.onerror = function () {
-          reject(req.error);
-        };
-      });
-    });
+  function lsSet(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
   }
 
   const DEFAULT_STATE = {
@@ -183,9 +142,9 @@
 
   let storageOk = true;
 
-  async function loadState() {
+  function loadState() {
     try {
-      const result = await idbGet(STORAGE_KEY);
+      const result = lsGet(STORAGE_KEY);
       if (result) {
         if (Array.isArray(result.docTypes)) {
           result.docTypes.forEach(function (dt) {
@@ -201,20 +160,20 @@
       }
     } catch (e) {
       storageOk = false;
-      console.error("Failed to load ledger state from IndexedDB", e);
+      console.error("Failed to load ledger state from localStorage", e);
     }
     const def = clone(DEFAULT_STATE);
     showNotTracking = !!def.preferences.showNotTracking;
     return def;
   }
 
-  async function saveState() {
+  function saveState() {
     try {
-      await idbSet(STORAGE_KEY, state);
+      lsSet(STORAGE_KEY, state);
       storageOk = true;
     } catch (e) {
       storageOk = false;
-      console.error("Failed to save ledger state to IndexedDB", e);
+      console.error("Failed to save ledger state to localStorage", e);
     }
     updateStorageWarning();
   }
@@ -225,14 +184,14 @@
     el.style.display = storageOk ? "none" : "block";
   }
 
-  async function exportData() {
+  function exportData() {
     let data;
     try {
-      const stored = await idbGet(STORAGE_KEY);
+      const stored = lsGet(STORAGE_KEY);
       data = stored || state;
     } catch (e) {
       console.error(
-        "Failed to read export data from IndexedDB, falling back to in-memory state",
+        "Failed to read export data from localStorage, falling back to in-memory state",
         e,
       );
       data = state;
@@ -315,7 +274,7 @@
     const showEl = document.getElementById("kb-show-not-tracking");
     if (showEl) showEl.checked = showNotTracking;
     try {
-      await saveState();
+      saveState();
       render();
       alert("Data imported successfully.");
     } catch (e) {
@@ -842,8 +801,8 @@
     openRewardForm(rewardId);
   }
 
-  async function init() {
-    state = await loadState();
+  function init() {
+    state = loadState();
     updateStorageWarning();
     document.getElementById("kb-loading").style.display = "none";
     document.getElementById("kb-app").style.display = "block";
@@ -881,14 +840,14 @@
       .addEventListener("change", handleImportFile);
     document
       .getElementById("kb-reset-all")
-      .addEventListener("click", async function () {
+      .addEventListener("click", function () {
         if (!confirm("Reset all inventory and rewards? This cannot be undone."))
           return;
         state = clone(DEFAULT_STATE);
         showNotTracking = !!state.preferences.showNotTracking;
         const showEl2 = document.getElementById("kb-show-not-tracking");
         if (showEl2) showEl2.checked = showNotTracking;
-        await saveState();
+        saveState();
         render();
       });
   }
