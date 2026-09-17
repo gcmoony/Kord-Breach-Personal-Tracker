@@ -39,6 +39,14 @@
 
         <div class="kb-section">
           <div class="kb-section-head">
+            <p class="kb-section-title">Required <b>Documents</b></p>
+            <span class="kb-section-sub">total needed to unlock remaining tracking rewards</span>
+          </div>
+          <div class="kb-inv-grid" id="kb-required-grid"></div>
+        </div>
+
+        <div class="kb-section">
+          <div class="kb-section-head">
             <p class="kb-section-title">Document <b>Inventory</b></p>
             <span class="kb-section-sub">what you're currently holding</span>
           </div>
@@ -57,6 +65,10 @@
               <option value="locked">Locked</option>
               <option value="unlocked">Unlocked</option>
             </select>
+            <label class="kb-toggle-label" for="kb-show-not-tracking">
+              <input type="checkbox" id="kb-show-not-tracking">
+              Show not tracking
+            </label>
           </div>
           <div id="kb-rewards-list"></div>
           <button class="kb-btn" id="kb-show-reward-form" style="margin-top:6px;">+ Add reward</button>

@@ -163,11 +163,15 @@
       { id: "default-p12-2", name: "Nocturnal Upper Tactical Clothing", page: 12, reqs: [], unlocked: false },
       { id: "default-p12-3", name: "Nocturnal Lower Tactical Clothing", page: 12, reqs: [], unlocked: false },
     ],
+    preferences: {
+      showNotTracking: false,
+    },
   };
 
   let state = null;
   let nextFormReqCount = 1;
   let rewardFilter = "all";
+  let showNotTracking = false;
 
   function uid(prefix) {
     return prefix + "_" + Math.random().toString(36).slice(2, 9);
@@ -188,13 +192,20 @@
             delete dt.total;
           });
         }
+        if (!result.preferences) {
+          result.preferences = clone(DEFAULT_STATE.preferences);
+        }
+        // sync toggle state from persisted preferences
+        showNotTracking = !!result.preferences.showNotTracking;
         return result;
       }
     } catch (e) {
       storageOk = false;
       console.error("Failed to load ledger state from IndexedDB", e);
     }
-    return clone(DEFAULT_STATE);
+    const def = clone(DEFAULT_STATE);
+    showNotTracking = !!def.preferences.showNotTracking;
+    return def;
   }
 
   async function saveState() {
@@ -299,6 +310,10 @@
       return;
     }
     state = clone(parsed);
+    if (!state.preferences) state.preferences = clone(DEFAULT_STATE.preferences);
+    showNotTracking = !!state.preferences.showNotTracking;
+    const showEl = document.getElementById("kb-show-not-tracking");
+    if (showEl) showEl.checked = showNotTracking;
     try {
       await saveState();
       render();
@@ -325,14 +340,76 @@
   }
 
   function render() {
+    renderRequiredDocuments();
     renderInventory();
     renderRewards();
     renderOverall();
   }
 
+  function renderRequiredDocuments() {
+    const grid = document.getElementById("kb-required-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    const required = {};
+    state.docTypes.forEach(function (dt) {
+      required[dt.id] = 0;
+    });
+    state.rewards.forEach(function (r) {
+      if (r.unlocked || r.notTracking) return;
+      (r.reqs || []).forEach(function (req) {
+        if (!req.docId) return;
+        required[req.docId] = (required[req.docId] || 0) + (parseInt(req.qty, 10) || 0);
+      });
+    });
+    const hasAny = Object.values(required).some(function (v) {
+      return v > 0;
+    });
+    if (!hasAny) {
+      const empty = document.createElement("div");
+      empty.className = "kb-empty";
+      empty.style.gridColumn = "1 / -1";
+      empty.textContent = "No documents required — all tracking rewards unlocked or no requirements set.";
+      grid.appendChild(empty);
+      return;
+    }
+    state.docTypes.forEach(function (dt) {
+      const need = required[dt.id] || 0;
+      if (need === 0) return;
+      const have = state.inventory[dt.id] || 0;
+      const remaining = Math.max(0, need - have);
+      const pct = need > 0 ? Math.min(100, Math.round((have / need) * 100)) : 0;
+      const tile = document.createElement("div");
+      tile.className = "kb-doc-tile";
+      tile.innerHTML =
+        '<div class="inventory-card-header"><div class="kb-doc-name">' +
+        escapeHtml(dt.name) +
+        "</div>" +
+        (dt.locations
+          ? '<div class="kb-doc-locations">' + escapeHtml(dt.locations) + "</div>"
+          : "") +
+        '</div><div class="kb-doc-count-row"><div class="kb-doc-count">' +
+        have +
+        '<span class="kb-doc-total"> / ' +
+        need +
+        '</span></div></div>' +
+        '<div class="kb-doc-mini-bar"><div class="kb-doc-mini-bar-inner" style="width:' +
+        pct +
+        '%"></div></div>' +
+        '<div class="kb-doc-remaining">' +
+        (remaining === 0 ? "Requirement met" : remaining + " more needed") +
+        "</div>";
+      grid.appendChild(tile);
+    });
+  }
+
   function renderOverall() {
-    const total = state.rewards.length;
-    const unlocked = state.rewards.filter(function (r) {
+    const visibleRewards = showNotTracking
+      ? state.rewards
+      : state.rewards.filter(function (r) {
+          return !r.notTracking;
+        });
+    const total = visibleRewards.length;
+    const unlocked = visibleRewards.filter(function (r) {
       return r.unlocked;
     }).length;
     const pct = total === 0 ? 0 : Math.round((unlocked / total) * 100);
@@ -407,13 +484,18 @@
       return (a.page || 0) - (b.page || 0);
     });
 
-    let filtered = sorted;
+    let visible = showNotTracking
+      ? sorted
+      : sorted.filter(function (r) {
+          return !r.notTracking;
+        });
+    let filtered = visible;
     if (rewardFilter === "locked") {
-      filtered = sorted.filter(function (r) {
+      filtered = visible.filter(function (r) {
         return !r.unlocked;
       });
     } else if (rewardFilter === "unlocked") {
-      filtered = sorted.filter(function (r) {
+      filtered = visible.filter(function (r) {
         return r.unlocked;
       });
     }
@@ -435,7 +517,10 @@
 
     filtered.forEach(function (reward) {
       const card = document.createElement("div");
-      card.className = "kb-reward" + (reward.unlocked ? " unlocked" : "");
+      card.className =
+        "kb-reward" +
+        (reward.unlocked ? " unlocked" : "") +
+        (reward.notTracking ? " not-tracking" : "");
 
       const reqChips = reward.reqs
         .map(function (r) {
@@ -459,6 +544,9 @@
         (reward.unlocked
           ? '<div class="kb-unlocked-stamp">UNLOCKED</div>'
           : "") +
+        (reward.notTracking
+          ? '<div class="kb-not-tracking-stamp">NOT TRACKING</div>'
+          : "") +
         '<div class="kb-reward-top">' +
         "<div>" +
         '<div class="kb-reward-name">' +
@@ -468,9 +556,15 @@
           ? '<div class="kb-reward-page">PAGE ' + reward.page + "</div>"
           : "") +
         "</div>" +
-        '<button class="kb-reward-remove" data-remove-reward="' +
+        '<button class="kb-reward-remove' +
+        (reward.notTracking ? " is-adding" : "") +
+        '" data-remove-reward="' +
         reward.id +
-        '" title="Remove reward">✕</button>' +
+        '" title="' +
+        (reward.notTracking ? "Track again" : "Stop tracking") +
+        '">' +
+        (reward.notTracking ? "+" : "✕") +
+        "</button>" +
         "</div>" +
         '<div class="kb-req-list">' +
         (reqChips ||
@@ -486,10 +580,8 @@
         "</button>" +
         '<button class="kb-btn" data-mark="' +
         reward.id +
-        '" ' +
-        (reward.unlocked ? "disabled" : "") +
-        ' style="border-color:var(--muted);color:var(--muted);">' +
-        (reward.unlocked ? "Unlocked" : "Mark unlocked (no inventory)") +
+        '" style="border-color:var(--muted);color:var(--muted);">' +
+        (reward.unlocked ? "Lock" : "Mark unlocked (no inventory)") +
         "</button>" +
         '<button class="kb-btn" data-edit="' +
         reward.id +
@@ -521,9 +613,19 @@
         const reward = state.rewards.find(function (r) {
           return r.id === id;
         });
-        if (!reward || reward.unlocked) return;
-        reward.unlocked = true;
-        reward.consumedInventory = false;
+        if (!reward) return;
+        if (reward.unlocked) {
+          if (reward.consumedInventory) {
+            reward.reqs.forEach(function (r) {
+              state.inventory[r.docId] = (state.inventory[r.docId] || 0) + r.qty;
+            });
+            reward.consumedInventory = false;
+          }
+          reward.unlocked = false;
+        } else {
+          reward.unlocked = true;
+          reward.consumedInventory = false;
+        }
         saveState();
         render();
       });
@@ -534,17 +636,8 @@
         const reward = state.rewards.find(function (r) {
           return r.id === id;
         });
-        if (reward && reward.unlocked) {
-          reward.reqs.forEach(function (r) {
-            if (reward.consumedInventory) {
-              state.inventory[r.docId] =
-                (state.inventory[r.docId] || 0) + r.qty;
-            }
-          });
-        }
-        state.rewards = state.rewards.filter(function (r) {
-          return r.id !== id;
-        });
+        if (!reward) return;
+        reward.notTracking = !reward.notTracking;
         saveState();
         render();
       });
@@ -629,6 +722,7 @@
         '"/></div>' +
         "</div>" +
         '<label style="margin-bottom:6px;">Requirements</label>' +
+        '<hr class="kb-form-hr">' +
         reqRowsHtml +
         '<div class="kb-form-actions">' +
         '<button class="kb-btn" id="kb-rf-add-req" type="button">+ requirement</button>' +
@@ -762,6 +856,18 @@
         renderRewards();
       });
     }
+    const showNotTrackingEl = document.getElementById("kb-show-not-tracking");
+    if (showNotTrackingEl) {
+      showNotTrackingEl.checked = showNotTracking;
+      showNotTrackingEl.addEventListener("change", function (e) {
+        showNotTracking = e.target.checked;
+        if (!state.preferences) state.preferences = clone(DEFAULT_STATE.preferences);
+        state.preferences.showNotTracking = showNotTracking;
+        saveState();
+        renderRewards();
+        renderOverall();
+      });
+    }
 
     document
       .getElementById("kb-show-reward-form")
@@ -779,6 +885,9 @@
         if (!confirm("Reset all inventory and rewards? This cannot be undone."))
           return;
         state = clone(DEFAULT_STATE);
+        showNotTracking = !!state.preferences.showNotTracking;
+        const showEl2 = document.getElementById("kb-show-not-tracking");
+        if (showEl2) showEl2.checked = showNotTracking;
         await saveState();
         render();
       });
