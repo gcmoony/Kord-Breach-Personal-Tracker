@@ -486,7 +486,7 @@
             var tech = {
               id: "technical",
               name: "Technical Documentation",
-              locations: "Labs / Reserve / Ground Zero",
+              locations: "Shoreline / Woods / Lighthouse",
             };
             if (idx >= 0) result.docTypes.splice(idx, 0, tech);
             else result.docTypes.push(tech);
