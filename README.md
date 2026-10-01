@@ -3,25 +3,82 @@
 Track your reward and document progress for the Escape From Tarkov KORD Breach
 event.
 
-## What it does (for now)
+## Features
 
-In its initial state, it shows you how many of each type of document you need to
-collect in order to unlock every single reward. Currently, these documents were
-defaulted based off a value provided in
-[this reddit post](https://www.reddit.com/r/EscapefromTarkov/comments/1vj6gi0/discussion_a_breakdown_of_the_battle_pass/).
+### Document Inventory
 
-Things it tracks:
+- Tracks 9 document types — Financial documents, PMC personnel files, Project
+  documentation, Blueprints and technical documentation, Technical
+  Documentation, Test documentation, User documentation, Medical documents, and
+  Classified (universal) — each with its default map locations.
+- Adjust how many of each document you own with +/- steppers. The total
+  documents in your inventory is shown in the progress header.
 
-- Total amount of each document required
-- Amount of each document you have in inventory
-- Rewards you can mark as collected
+### Required Documents
 
-Things it does:
+- Automatically calculates how many of each document you still need to unlock
+  all remaining tracked rewards.
+- Shows your current count vs. required count, a progress bar, and how many more
+  are needed for each type.
+- Ignores rewards you've already unlocked or marked as not tracking.
 
-- Claiming a reward subtracts from your inventory AND the total documents left
-  to collect
-- Claim a reward that you may already have, decreasing total documents left to
-  collect but not affecting current inventory.
+### Battle Pass Rewards
+
+- Comes pre-loaded with all 54 Battle Pass rewards across 12 pages.
+- Each reward card shows its page, what documents it costs, and whether you have
+  enough (with color-coded requirement chips).
+- **Claim** a reward when you have enough documents — this deducts the cost from
+  your inventory and marks it as unlocked.
+- **Mark unlocked** to flag a reward you already earned in-game without spending
+  tracked documentos — and **Lock** it again to undo. If you claimed a reward
+  and lock it, the documents are refunded.
+- **Stop tracking / Track again** to hide rewards you don't care about — hidden
+  rewards don't count toward required documents or overall progress.
+- **Edit** any reward to change its name, page, or document costs.
+
+### Overall Progress
+
+- Header stamp and progress bar show the percentage and count of rewards you've
+  unlocked out of the total tracked rewards.
+
+### Reward Management
+
+- **Add reward** button opens a form to create custom rewards with a name,
+  optional page number, and any number of document requirements.
+- Add or remove requirement rows as needed, then save. Cancel, click outside, or
+  press Escape to close without saving.
+
+### Filtering
+
+- Filter rewards by **All, Locked, or Unlocked**.
+- Toggle **Show not tracking** to reveal or hide rewards you've stopped
+  tracking.
+
+### Data Management
+
+- **Export data** downloads a dated JSON backup of your entire ledger.
+- **Import data** loads a previously exported JSON file after validating its
+  format and confirming overwrite.
+- **Reset all data** clears inventory and rewards back to defaults after
+  confirmation.
+- All data is stored privately in your browser's local storage and a warning is
+  shown if saving is blocked (e.g., private/incognito mode).
+
+## Getting Started
+
+No build step — just open `index.html` in a browser, or serve the folder with
+any static server:
+
+```bash
+npx serve .
+# or
+python -m http.server
+```
+
+Inventory starts at zero with all rewards locked and no document costs set —
+edit rewards or add your own to match the Battle Pass costs. Previously,
+defaults were based on
+[this reddit breakdown](https://www.reddit.com/r/EscapefromTarkov/comments/1vj6gi0/discussion_a_breakdown_of_the_battle_pass/).
 
 ## Suggestions
 

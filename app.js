@@ -1,58 +1,17 @@
 (function () {
   const STORAGE_KEY = "kord-breach-state-v2";
-  const DB_NAME = "kord-breach-db";
-  const DB_VERSION = 1;
-  const STORE_NAME = "state";
 
-  function openDB() {
-    return new Promise(function (resolve, reject) {
-      if (!("indexedDB" in window)) {
-        reject(new Error("IndexedDB not supported"));
-        return;
-      }
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = function () {
-        req.result.createObjectStore(STORE_NAME);
-      };
-      req.onsuccess = function () {
-        resolve(req.result);
-      };
-      req.onerror = function () {
-        reject(req.error);
-      };
-    });
+  function lsGet(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      throw e;
+    }
   }
 
-  function idbGet(key) {
-    return openDB().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        const tx = db.transaction(STORE_NAME, "readonly");
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.get(key);
-        req.onsuccess = function () {
-          resolve(req.result);
-        };
-        req.onerror = function () {
-          reject(req.error);
-        };
-      });
-    });
-  }
-
-  function idbSet(key, value) {
-    return openDB().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        const tx = db.transaction(STORE_NAME, "readwrite");
-        const store = tx.objectStore(STORE_NAME);
-        const req = store.put(value, key);
-        req.onsuccess = function () {
-          resolve();
-        };
-        req.onerror = function () {
-          reject(req.error);
-        };
-      });
-    });
+  function lsSet(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
   }
 
   const DEFAULT_STATE = {
@@ -76,6 +35,11 @@
         id: "blueprints",
         name: "Blueprints and technical documentation",
         locations: "Interchange / Factory / Labyrinth",
+      },
+      {
+        id: "technical",
+        name: "Technical Documentation",
+        locations: "Shoreline / Woods / Lighthouse",
       },
       {
         id: "test",
@@ -103,65 +67,384 @@
       personnel: 0,
       project: 0,
       blueprints: 0,
+      technical: 0,
       test: 0,
       user: 0,
       medical: 0,
       classified: 0,
     },
     rewards: [
-      { id: "default-p1-1", name: "Marked Dogtag", page: 1, reqs: [], unlocked: false },
-      { id: "default-p1-2", name: "50 TarCoins", page: 1, reqs: [], unlocked: false },
-      { id: "default-p1-3", name: "Burn Poster", page: 1, reqs: [], unlocked: false },
-      { id: "default-p1-4", name: "Black Division Gear Crate", page: 1, reqs: [], unlocked: false },
-      { id: "default-p1-5", name: "Black Wood Ceiling", page: 1, reqs: [], unlocked: false },
-      { id: "default-p2-1", name: "Gentex Ops-Core SOTR Respirator (barter)", page: 2, reqs: [], unlocked: false },
-      { id: "default-p2-2", name: "Black Division Gear Crate", page: 2, reqs: [], unlocked: false },
-      { id: "default-p2-3", name: "Red Hawaii Tactical Clothing", page: 2, reqs: [], unlocked: false },
-      { id: "default-p2-4", name: "Scorpion Target", page: 2, reqs: [], unlocked: false },
-      { id: "default-p2-5", name: "50 TarCoins", page: 2, reqs: [], unlocked: false },
-      { id: "default-p3-1", name: "Mystery Ranch NICE Frame Load Sling (barter)", page: 3, reqs: [], unlocked: false },
-      { id: "default-p3-2", name: "Black Division Gear Crate", page: 3, reqs: [], unlocked: false },
-      { id: "default-p3-3", name: "Black Herringbone", page: 3, reqs: [], unlocked: false },
-      { id: "default-p3-4", name: "50 TarCoins", page: 3, reqs: [], unlocked: false },
-      { id: "default-p3-5", name: "Heart Mannequin Pose", page: 3, reqs: [], unlocked: false },
-      { id: "default-p4-1", name: "Marked Dogtag 2", page: 4, reqs: [], unlocked: false },
-      { id: "default-p4-2", name: "Microtech Jagdkommando Knife", page: 4, reqs: [], unlocked: false },
-      { id: "default-p4-3", name: "50 TarCoins", page: 4, reqs: [], unlocked: false },
-      { id: "default-p4-4", name: "Beware the Bear Poster", page: 4, reqs: [], unlocked: false },
-      { id: "default-p4-5", name: "Black Division Gear Crate", page: 4, reqs: [], unlocked: false },
-      { id: "default-p5-1", name: "Orange Hawaii Tactical Clothing", page: 5, reqs: [], unlocked: false },
-      { id: "default-p5-2", name: "50 TarCoins", page: 5, reqs: [], unlocked: false },
-      { id: "default-p5-3", name: "Black Division Target", page: 5, reqs: [], unlocked: false },
-      { id: "default-p5-4", name: "Black Division Gear Crate", page: 5, reqs: [], unlocked: false },
-      { id: "default-p5-5", name: "Ferro Concepts FCPC V5 Plate Carrier Black Division (barter)", page: 5, reqs: [], unlocked: false },
-      { id: "default-p6-1", name: "Knyazev Character Appearance", page: 6, reqs: [], unlocked: false },
-      { id: "default-p6-2", name: "O'Connor Character Appearance", page: 6, reqs: [], unlocked: false },
-      { id: "default-p6-3", name: "Howa Type 20 5.56×45 Assault Rifle (barter)", page: 6, reqs: [], unlocked: false },
-      { id: "default-p7-1", name: "Marked Dogtag 3", page: 7, reqs: [], unlocked: false },
-      { id: "default-p7-2", name: "50 TarCoins", page: 7, reqs: [], unlocked: false },
-      { id: "default-p7-3", name: "Scorpion Upper Tactical Clothing", page: 7, reqs: [], unlocked: false },
-      { id: "default-p7-4", name: "Scorpion Lower Tactical Clothing", page: 7, reqs: [], unlocked: false },
-      { id: "default-p8-1", name: "Black Division Gear Crate", page: 8, reqs: [], unlocked: false },
-      { id: "default-p8-2", name: "50 TarCoins", page: 8, reqs: [], unlocked: false },
-      { id: "default-p8-3", name: "White Accent Walls", page: 8, reqs: [], unlocked: false },
-      { id: "default-p8-4", name: "Arch Mannequin Pose", page: 8, reqs: [], unlocked: false },
-      { id: "default-p8-5", name: "Dome Mannequin Pose", page: 8, reqs: [], unlocked: false },
-      { id: "default-p9-1", name: "Spiritus Systems LV-119 Plate Carrier Black Division V2 (barter)", page: 9, reqs: [], unlocked: false },
-      { id: "default-p9-2", name: "50 TarCoins", page: 9, reqs: [], unlocked: false },
-      { id: "default-p9-3", name: "Tasmanian Tiger Modular Pack 45 Plus Multicam Black (barter)", page: 9, reqs: [], unlocked: false },
-      { id: "default-p9-4", name: "Black Division Gear Crate", page: 9, reqs: [], unlocked: false },
-      { id: "default-p9-5", name: "Server Room", page: 9, reqs: [], unlocked: false },
-      { id: "default-p10-1", name: "Anton Character Voice", page: 10, reqs: [], unlocked: false },
-      { id: "default-p10-2", name: "Garrett Character Voice", page: 10, reqs: [], unlocked: false },
-      { id: "default-p10-3", name: "100 TarCoins", page: 10, reqs: [], unlocked: false },
-      { id: "default-p10-4", name: "Black Division Gear Crate", page: 10, reqs: [], unlocked: false },
-      { id: "default-p11-1", name: "Marked Dogtag 4", page: 11, reqs: [], unlocked: false },
-      { id: "default-p11-2", name: "150 TarCoins", page: 11, reqs: [], unlocked: false },
-      { id: "default-p11-3", name: "Knyazev (After Battle) Character Appearance", page: 11, reqs: [], unlocked: false },
-      { id: "default-p11-4", name: "O'Connor (After Battle) Character Appearance", page: 11, reqs: [], unlocked: false },
-      { id: "default-p12-1", name: "Norinco QBZ-191 5.8×42 Assault Rifle (barter)", page: 12, reqs: [], unlocked: false },
-      { id: "default-p12-2", name: "Nocturnal Upper Tactical Clothing", page: 12, reqs: [], unlocked: false },
-      { id: "default-p12-3", name: "Nocturnal Lower Tactical Clothing", page: 12, reqs: [], unlocked: false },
+      {
+        id: "default-p1-1",
+        name: "Marked Dogtag",
+        page: 1,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p1-2",
+        name: "50 TarCoins",
+        page: 1,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p1-3",
+        name: "Burn Poster",
+        page: 1,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p1-4",
+        name: "Black Division Gear Crate",
+        page: 1,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p1-5",
+        name: "Black Wood Ceiling",
+        page: 1,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p2-1",
+        name: "Gentex Ops-Core SOTR Respirator (barter)",
+        page: 2,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p2-2",
+        name: "Black Division Gear Crate",
+        page: 2,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p2-3",
+        name: "Red Hawaii Tactical Clothing",
+        page: 2,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p2-4",
+        name: "Scorpion Target",
+        page: 2,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p2-5",
+        name: "50 TarCoins",
+        page: 2,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p3-1",
+        name: "Mystery Ranch NICE Frame Load Sling (barter)",
+        page: 3,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p3-2",
+        name: "Black Division Gear Crate",
+        page: 3,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p3-3",
+        name: "Black Herringbone",
+        page: 3,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p3-4",
+        name: "50 TarCoins",
+        page: 3,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p3-5",
+        name: "Heart Mannequin Pose",
+        page: 3,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p4-1",
+        name: "Marked Dogtag 2",
+        page: 4,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p4-2",
+        name: "Microtech Jagdkommando Knife",
+        page: 4,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p4-3",
+        name: "50 TarCoins",
+        page: 4,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p4-4",
+        name: "Beware the Bear Poster",
+        page: 4,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p4-5",
+        name: "Black Division Gear Crate",
+        page: 4,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p5-1",
+        name: "Orange Hawaii Tactical Clothing",
+        page: 5,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p5-2",
+        name: "50 TarCoins",
+        page: 5,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p5-3",
+        name: "Black Division Target",
+        page: 5,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p5-4",
+        name: "Black Division Gear Crate",
+        page: 5,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p5-5",
+        name: "Ferro Concepts FCPC V5 Plate Carrier Black Division (barter)",
+        page: 5,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p6-1",
+        name: "Knyazev Character Appearance",
+        page: 6,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p6-2",
+        name: "O'Connor Character Appearance",
+        page: 6,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p6-3",
+        name: "Howa Type 20 5.56×45 Assault Rifle (barter)",
+        page: 6,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p7-1",
+        name: "Marked Dogtag 3",
+        page: 7,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p7-2",
+        name: "50 TarCoins",
+        page: 7,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p7-3",
+        name: "Scorpion Upper Tactical Clothing",
+        page: 7,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p7-4",
+        name: "Scorpion Lower Tactical Clothing",
+        page: 7,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p8-1",
+        name: "Black Division Gear Crate",
+        page: 8,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p8-2",
+        name: "50 TarCoins",
+        page: 8,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p8-3",
+        name: "White Accent Walls",
+        page: 8,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p8-4",
+        name: "Arch Mannequin Pose",
+        page: 8,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p8-5",
+        name: "Dome Mannequin Pose",
+        page: 8,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p9-1",
+        name: "Spiritus Systems LV-119 Plate Carrier Black Division V2 (barter)",
+        page: 9,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p9-2",
+        name: "50 TarCoins",
+        page: 9,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p9-3",
+        name: "Tasmanian Tiger Modular Pack 45 Plus Multicam Black (barter)",
+        page: 9,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p9-4",
+        name: "Black Division Gear Crate",
+        page: 9,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p9-5",
+        name: "Server Room",
+        page: 9,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p10-1",
+        name: "Anton Character Voice",
+        page: 10,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p10-2",
+        name: "Garrett Character Voice",
+        page: 10,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p10-3",
+        name: "100 TarCoins",
+        page: 10,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p10-4",
+        name: "Black Division Gear Crate",
+        page: 10,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p11-1",
+        name: "Marked Dogtag 4",
+        page: 11,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p11-2",
+        name: "150 TarCoins",
+        page: 11,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p11-3",
+        name: "Knyazev (After Battle) Character Appearance",
+        page: 11,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p11-4",
+        name: "O'Connor (After Battle) Character Appearance",
+        page: 11,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p12-1",
+        name: "Norinco QBZ-191 5.8×42 Assault Rifle (barter)",
+        page: 12,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p12-2",
+        name: "Nocturnal Upper Tactical Clothing",
+        page: 12,
+        reqs: [],
+        unlocked: false,
+      },
+      {
+        id: "default-p12-3",
+        name: "Nocturnal Lower Tactical Clothing",
+        page: 12,
+        reqs: [],
+        unlocked: false,
+      },
     ],
     preferences: {
       showNotTracking: false,
@@ -183,13 +466,36 @@
 
   let storageOk = true;
 
-  async function loadState() {
+  function loadState() {
     try {
-      const result = await idbGet(STORAGE_KEY);
+      const result = lsGet(STORAGE_KEY);
       if (result) {
         if (Array.isArray(result.docTypes)) {
           result.docTypes.forEach(function (dt) {
             delete dt.total;
+          });
+          // migrate: add Technical Documentation if missing (distinct from Blueprints and technical documentation)
+          if (
+            !result.docTypes.some(function (dt) {
+              return dt.id === "technical";
+            })
+          ) {
+            var idx = result.docTypes.findIndex(function (dt) {
+              return dt.id === "classified";
+            });
+            var tech = {
+              id: "technical",
+              name: "Technical Documentation",
+              locations: "Shoreline / Woods / Lighthouse",
+            };
+            if (idx >= 0) result.docTypes.splice(idx, 0, tech);
+            else result.docTypes.push(tech);
+          }
+        }
+        // migrate: ensure inventory has all keys (e.g., technical for old saves)
+        if (result.inventory && typeof result.inventory === "object") {
+          Object.keys(DEFAULT_STATE.inventory).forEach(function (k) {
+            if (!(k in result.inventory)) result.inventory[k] = 0;
           });
         }
         if (!result.preferences) {
@@ -201,20 +507,20 @@
       }
     } catch (e) {
       storageOk = false;
-      console.error("Failed to load ledger state from IndexedDB", e);
+      console.error("Failed to load ledger state from localStorage", e);
     }
     const def = clone(DEFAULT_STATE);
     showNotTracking = !!def.preferences.showNotTracking;
     return def;
   }
 
-  async function saveState() {
+  function saveState() {
     try {
-      await idbSet(STORAGE_KEY, state);
+      lsSet(STORAGE_KEY, state);
       storageOk = true;
     } catch (e) {
       storageOk = false;
-      console.error("Failed to save ledger state to IndexedDB", e);
+      console.error("Failed to save ledger state to localStorage", e);
     }
     updateStorageWarning();
   }
@@ -225,14 +531,14 @@
     el.style.display = storageOk ? "none" : "block";
   }
 
-  async function exportData() {
+  function exportData() {
     let data;
     try {
-      const stored = await idbGet(STORAGE_KEY);
+      const stored = lsGet(STORAGE_KEY);
       data = stored || state;
     } catch (e) {
       console.error(
-        "Failed to read export data from IndexedDB, falling back to in-memory state",
+        "Failed to read export data from localStorage, falling back to in-memory state",
         e,
       );
       data = state;
@@ -310,12 +616,13 @@
       return;
     }
     state = clone(parsed);
-    if (!state.preferences) state.preferences = clone(DEFAULT_STATE.preferences);
+    if (!state.preferences)
+      state.preferences = clone(DEFAULT_STATE.preferences);
     showNotTracking = !!state.preferences.showNotTracking;
     const showEl = document.getElementById("kb-show-not-tracking");
     if (showEl) showEl.checked = showNotTracking;
     try {
-      await saveState();
+      saveState();
       render();
       alert("Data imported successfully.");
     } catch (e) {
@@ -358,7 +665,8 @@
       if (r.unlocked || r.notTracking) return;
       (r.reqs || []).forEach(function (req) {
         if (!req.docId) return;
-        required[req.docId] = (required[req.docId] || 0) + (parseInt(req.qty, 10) || 0);
+        required[req.docId] =
+          (required[req.docId] || 0) + (parseInt(req.qty, 10) || 0);
       });
     });
     const hasAny = Object.values(required).some(function (v) {
@@ -368,7 +676,8 @@
       const empty = document.createElement("div");
       empty.className = "kb-empty";
       empty.style.gridColumn = "1 / -1";
-      empty.textContent = "No documents required — all tracking rewards unlocked or no requirements set.";
+      empty.textContent =
+        "No documents required — all tracking rewards unlocked or no requirements set.";
       grid.appendChild(empty);
       return;
     }
@@ -385,13 +694,15 @@
         escapeHtml(dt.name) +
         "</div>" +
         (dt.locations
-          ? '<div class="kb-doc-locations">' + escapeHtml(dt.locations) + "</div>"
+          ? '<div class="kb-doc-locations">' +
+            escapeHtml(dt.locations) +
+            "</div>"
           : "") +
         '</div><div class="kb-doc-count-row"><div class="kb-doc-count">' +
         have +
         '<span class="kb-doc-total"> / ' +
         need +
-        '</span></div></div>' +
+        "</span></div></div>" +
         '<div class="kb-doc-mini-bar"><div class="kb-doc-mini-bar-inner" style="width:' +
         pct +
         '%"></div></div>' +
@@ -617,7 +928,8 @@
         if (reward.unlocked) {
           if (reward.consumedInventory) {
             reward.reqs.forEach(function (r) {
-              state.inventory[r.docId] = (state.inventory[r.docId] || 0) + r.qty;
+              state.inventory[r.docId] =
+                (state.inventory[r.docId] || 0) + r.qty;
             });
             reward.consumedInventory = false;
           }
@@ -730,7 +1042,7 @@
         '<div class="kb-form-actions">' +
         '<button class="kb-btn" id="kb-rf-save" type="button">' +
         (isEdit ? "Update reward" : "Save reward") +
-        '</button>' +
+        "</button>" +
         '<button class="kb-btn" id="kb-rf-cancel" type="button" style="border-color:var(--border);color:var(--muted);">Cancel</button>' +
         "</div>";
 
@@ -842,8 +1154,8 @@
     openRewardForm(rewardId);
   }
 
-  async function init() {
-    state = await loadState();
+  function init() {
+    state = loadState();
     updateStorageWarning();
     document.getElementById("kb-loading").style.display = "none";
     document.getElementById("kb-app").style.display = "block";
@@ -861,7 +1173,8 @@
       showNotTrackingEl.checked = showNotTracking;
       showNotTrackingEl.addEventListener("change", function (e) {
         showNotTracking = e.target.checked;
-        if (!state.preferences) state.preferences = clone(DEFAULT_STATE.preferences);
+        if (!state.preferences)
+          state.preferences = clone(DEFAULT_STATE.preferences);
         state.preferences.showNotTracking = showNotTracking;
         saveState();
         renderRewards();
@@ -881,14 +1194,14 @@
       .addEventListener("change", handleImportFile);
     document
       .getElementById("kb-reset-all")
-      .addEventListener("click", async function () {
+      .addEventListener("click", function () {
         if (!confirm("Reset all inventory and rewards? This cannot be undone."))
           return;
         state = clone(DEFAULT_STATE);
         showNotTracking = !!state.preferences.showNotTracking;
         const showEl2 = document.getElementById("kb-show-not-tracking");
         if (showEl2) showEl2.checked = showNotTracking;
-        await saveState();
+        saveState();
         render();
       });
   }
